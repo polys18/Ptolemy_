@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Ptolemy - AI Powered GIS Dashboard",
+  "description": "A professional web-based GIS dashboard for visualizing GeoTIFF data with AI-powered metadata analysis. Features include layer management, histogram visualization, and Gemini-backed insights.",
+  "requestFramePermissions": []
+}
