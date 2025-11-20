@@ -32,9 +32,3 @@ export enum PanelView {
   STATS = 'STATS',
   SETTINGS = 'SETTINGS'
 }
-
-export interface AnalysisResult {
-  summary: string;
-  technicalDetails: string;
-  recommendations: string;
-}

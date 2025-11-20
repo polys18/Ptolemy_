@@ -8,8 +8,4 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
-  define: {
-    // Prevent "process is not defined" error in browser for code using process.env.API_KEY
-    'process.env': {} 
-  }
 });

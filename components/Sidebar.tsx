@@ -172,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       
       {/* Footer info */}
       <div className="p-3 border-t border-gis-800 text-[10px] text-gray-600 text-center bg-gis-900">
-        Powered by React Leaflet & Gemini 2.5 Flash
+        Powered by React Leaflet
       </div>
     </div>
   );
