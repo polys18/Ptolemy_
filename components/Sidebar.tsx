@@ -1,7 +1,6 @@
 import React from 'react';
-import { Layers, Activity, Eye, EyeOff, Trash2, UploadCloud, BarChart3 } from 'lucide-react';
+import { Layers, Activity, Eye, EyeOff, Trash2, UploadCloud, Server, Shield } from 'lucide-react';
 import { LayerData, PanelView } from '../types';
-import { StatsChart } from './StatsChart';
 
 interface SidebarProps {
   layers: LayerData[];
@@ -53,14 +52,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Layers className="w-4 h-4" /> Layers
         </button>
         <button
-          onClick={() => setActivePanel(PanelView.STATS)}
+          onClick={() => setActivePanel(PanelView.DATA_CENTERS)}
           className={`flex-1 py-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors ${
-            activePanel === PanelView.STATS
+            activePanel === PanelView.DATA_CENTERS
               ? 'text-brand-500 border-b-2 border-brand-500 bg-gis-800/50' 
               : 'text-gray-400 hover:text-gray-200 hover:bg-gis-800'
           }`}
         >
-          <BarChart3 className="w-4 h-4" /> Stats
+          <Server className="w-4 h-4" /> Data Centers
+        </button>
+        <button
+          onClick={() => setActivePanel(PanelView.RESTRICTED_AREAS)}
+          className={`flex-1 py-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors ${
+            activePanel === PanelView.RESTRICTED_AREAS
+              ? 'text-brand-500 border-b-2 border-brand-500 bg-gis-800/50' 
+              : 'text-gray-400 hover:text-gray-200 hover:bg-gis-800'
+          }`}
+        >
+          <Shield className="w-4 h-4" /> Restricted
         </button>
       </div>
 
@@ -144,27 +153,141 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {activePanel === PanelView.STATS && (
+        {activePanel === PanelView.DATA_CENTERS && (
           <div className="space-y-6">
-             <div className="flex items-center justify-between mb-4">
-               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Layer Statistics</h2>
-               {activeLayer && (
-                 <span className="text-xs text-brand-400 font-medium truncate max-w-[120px]">
-                   {activeLayer.name}
-                 </span>
-               )}
+             <div className="mb-4">
+               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Data Center Layers</h2>
+               <p className="text-xs text-gray-500">
+                 Data center layers are automatically loaded and visualized on startup.
+               </p>
              </div>
 
-             {activeLayer && activeLayer.stats ? (
-                <div className="animate-fadeIn">
-                  <StatsChart stats={activeLayer.stats} />
-                </div>
-             ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-gray-400 p-6 text-center border border-dashed border-gis-700 rounded-lg">
-                  <BarChart3 className="w-12 h-12 mb-3 opacity-20" />
-                  <p>Select a layer to view distribution statistics.</p>
-                </div>
-             )}
+             <div className="space-y-3">
+               {layers.filter(l => l.name.toLowerCase().includes('data center')).length === 0 ? (
+                 <div className="flex flex-col items-center justify-center h-64 text-gray-400 p-6 text-center border border-dashed border-gis-700 rounded-lg">
+                   <Server className="w-12 h-12 mb-3 opacity-20" />
+                   <p className="text-sm">No data center layers loaded.</p>
+                   <p className="text-xs mt-1">Check the DataCenters directory.</p>
+                 </div>
+               ) : (
+                 layers
+                   .filter(l => l.name.toLowerCase().includes('data center'))
+                   .map((layer) => (
+                     <div 
+                       key={layer.id} 
+                       className={`bg-gis-800 rounded-lg border p-3 transition-all ${
+                         activeLayerId === layer.id ? 'border-brand-500 ring-1 ring-brand-500/20' : 'border-gis-700'
+                       }`}
+                       onClick={() => setActiveLayerId(layer.id)}
+                     >
+                       <div className="flex items-center justify-between mb-3">
+                         <span className="text-sm font-medium text-gray-200 truncate max-w-[200px]" title={layer.name}>
+                           {layer.name}
+                         </span>
+                         <div className="flex items-center gap-1">
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); onToggleVisibility(layer.id); }}
+                             className="p-1.5 hover:bg-gis-700 rounded text-gray-400 hover:text-white"
+                           >
+                             {layer.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                           </button>
+                         </div>
+                       </div>
+                       
+                       <div className="space-y-1">
+                         <div className="flex justify-between text-xs text-gray-500">
+                           <span>Opacity</span>
+                           <span>{Math.round(layer.opacity * 100)}%</span>
+                         </div>
+                         <input
+                           type="range"
+                           min="0"
+                           max="1"
+                           step="0.1"
+                           value={layer.opacity}
+                           onChange={(e) => onUpdateOpacity(layer.id, parseFloat(e.target.value))}
+                           onClick={(e) => e.stopPropagation()}
+                           className="w-full h-1.5 bg-gis-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                         />
+                       </div>
+                     </div>
+                   ))
+               )}
+             </div>
+          </div>
+        )}
+
+        {activePanel === PanelView.RESTRICTED_AREAS && (
+          <div className="space-y-6">
+             <div className="mb-4">
+               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Restricted Area Layers</h2>
+               <p className="text-xs text-gray-500">
+                 Restricted area layers are automatically loaded and visualized on startup.
+               </p>
+             </div>
+
+             <div className="space-y-3">
+               {layers.filter(l => 
+                 l.name.includes('airfields') ||
+                 l.name.includes('military') ||
+                 l.name.includes('Railroads') ||
+                 l.name.includes('Roads')
+               ).length === 0 ? (
+                 <div className="flex flex-col items-center justify-center h-64 text-gray-400 p-6 text-center border border-dashed border-gis-700 rounded-lg">
+                   <Shield className="w-12 h-12 mb-3 opacity-20" />
+                   <p className="text-sm">No restricted area layers loaded.</p>
+                   <p className="text-xs mt-1">Check the Restrictions directory.</p>
+                 </div>
+               ) : (
+                 layers
+                   .filter(l => 
+                     l.name.includes('airfields') ||
+                     l.name.includes('military') ||
+                     l.name.includes('Railroads') ||
+                     l.name.includes('Roads')
+                   )
+                   .map((layer) => (
+                     <div 
+                       key={layer.id} 
+                       className={`bg-gis-800 rounded-lg border p-3 transition-all ${
+                         activeLayerId === layer.id ? 'border-brand-500 ring-1 ring-brand-500/20' : 'border-gis-700'
+                       }`}
+                       onClick={() => setActiveLayerId(layer.id)}
+                     >
+                       <div className="flex items-center justify-between mb-3">
+                         <span className="text-sm font-medium text-gray-200 truncate max-w-[200px]" title={layer.name}>
+                           {layer.name}
+                         </span>
+                         <div className="flex items-center gap-1">
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); onToggleVisibility(layer.id); }}
+                             className="p-1.5 hover:bg-gis-700 rounded text-gray-400 hover:text-white"
+                           >
+                             {layer.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                           </button>
+                         </div>
+                       </div>
+                       
+                       <div className="space-y-1">
+                         <div className="flex justify-between text-xs text-gray-500">
+                           <span>Opacity</span>
+                           <span>{Math.round(layer.opacity * 100)}%</span>
+                         </div>
+                         <input
+                           type="range"
+                           min="0"
+                           max="1"
+                           step="0.1"
+                           value={layer.opacity}
+                           onChange={(e) => onUpdateOpacity(layer.id, parseFloat(e.target.value))}
+                           onClick={(e) => e.stopPropagation()}
+                           className="w-full h-1.5 bg-gis-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                         />
+                       </div>
+                     </div>
+                   ))
+               )}
+             </div>
           </div>
         )}
 

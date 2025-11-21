@@ -29,6 +29,7 @@ export interface RasterStats {
 
 export enum PanelView {
   LAYERS = 'LAYERS',
-  STATS = 'STATS',
+  DATA_CENTERS = 'DATA_CENTERS',
+  RESTRICTED_AREAS = 'RESTRICTED_AREAS',
   SETTINGS = 'SETTINGS'
 }
