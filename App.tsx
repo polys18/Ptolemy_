@@ -79,7 +79,7 @@ function App() {
       setLoading(true);
       
       // Safety timeout - ensure loading state is reset after 2 minutes
-      let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
+      let timeoutId: number | null = window.setTimeout(() => {
         console.warn('Loading timeout - resetting loading state');
         setLoading(false);
         dataCentersLoading = false;
