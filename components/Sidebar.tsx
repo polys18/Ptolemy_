@@ -1,6 +1,15 @@
 import React from 'react';
-import { Layers, Activity, Eye, EyeOff, Trash2, UploadCloud, Server, Shield } from 'lucide-react';
+import { Layers, Activity, Eye, EyeOff, Trash2, UploadCloud, Server, Shield, BarChart3, FileText } from 'lucide-react';
 import { LayerData, PanelView } from '../types';
+import { StatisticsDashboard } from './StatisticsDashboard';
+
+interface RestrictedAreaStats {
+  [filename: string]: {
+    ones: number;
+    zeros: number;
+    percentage: number;
+  };
+}
 
 interface SidebarProps {
   layers: LayerData[];
@@ -12,6 +21,8 @@ interface SidebarProps {
   setActivePanel: (view: PanelView) => void;
   activeLayerId: string | null;
   setActiveLayerId: (id: string) => void;
+  restrictedAreaStats: RestrictedAreaStats;
+  onToggleSummary?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -23,7 +34,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activePanel,
   setActivePanel,
   activeLayerId,
-  setActiveLayerId
+  setActiveLayerId,
+  restrictedAreaStats,
+  onToggleSummary
 }) => {
   const activeLayer = layers.find(l => l.id === activeLayerId) || layers[0];
 
@@ -37,6 +50,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <h1 className="font-bold text-lg text-white tracking-tight">Ptolemy</h1>
         </div>
+        {onToggleSummary && (
+          <button
+            onClick={onToggleSummary}
+            className="p-1.5 hover:bg-gis-700 rounded text-gray-400 hover:text-brand-400 transition-colors"
+            title="Toggle Summary Panel"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Tab Navigation */}
@@ -70,6 +92,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <Shield className="w-4 h-4" /> Restricted
+        </button>
+        <button
+          onClick={() => setActivePanel(PanelView.STATISTICS)}
+          className={`flex-1 py-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors ${
+            activePanel === PanelView.STATISTICS
+              ? 'text-brand-500 border-b-2 border-brand-500 bg-gis-800/50' 
+              : 'text-gray-400 hover:text-gray-200 hover:bg-gis-800'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" /> Stats
         </button>
       </div>
 
@@ -162,6 +194,103 @@ export const Sidebar: React.FC<SidebarProps> = ({
                </p>
              </div>
 
+             {/* Screening Criteria Table */}
+             <div className="bg-gis-800 rounded-lg border border-gis-700 p-4">
+               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Screening Criteria</h3>
+               <div className="overflow-x-auto">
+                 <table className="w-full text-xs border-collapse">
+                   <thead>
+                     <tr>
+                       <th rowSpan={2} className="border border-gis-700 bg-gis-900 px-2 py-2 text-gray-300 font-semibold text-left">
+                         Screening Criteria
+                       </th>
+                       <th colSpan={4} className="border border-gis-700 bg-gis-900 px-2 py-2 text-gray-300 font-semibold">
+                         Screening Color Category
+                       </th>
+                     </tr>
+                     <tr>
+                       <th className="border border-gis-700 bg-blue-900/30 px-2 py-1 text-blue-400 font-medium">Blue</th>
+                       <th className="border border-gis-700 bg-cyan-900/30 px-2 py-1 text-cyan-400 font-medium">Cyan</th>
+                       <th className="border border-gis-700 bg-yellow-900/30 px-2 py-1 text-yellow-400 font-medium">Yellow</th>
+                       <th className="border border-gis-700 bg-red-900/30 px-2 py-1 text-red-400 font-medium">Red</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Roads (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;50</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;25</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Fiber Line (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;15</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Transmission Line (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;15</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Substation (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;15</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Gas Pipeline (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;15</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Carbon Storage (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;50</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;25</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Gas Storage (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;50</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;25</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Urban Areas (miles)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;30</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;15</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Land Cost ($k/acre)</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;319</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">319</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">130</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">60</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Data Center Employees</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;20</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;100</td>
+                       <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&gt;200</td>
+                     </tr>
+                   </tbody>
+                 </table>
+               </div>
+             </div>
+
              <div className="space-y-3">
                {layers.filter(l => l.name.toLowerCase().includes('data center')).length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-64 text-gray-400 p-6 text-center border border-dashed border-gis-700 rounded-lg">
@@ -217,35 +346,167 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {activePanel === PanelView.RESTRICTED_AREAS && (
-          <div className="space-y-6">
+        {activePanel === PanelView.RESTRICTED_AREAS && (() => {
+          const restrictedLayers = layers.filter(l => 
+            l.name.includes('airfields') ||
+            l.name.includes('military') ||
+            l.name.includes('Railroads') ||
+            l.name.includes('Roads')
+          );
+          
+          // Get stats from pre-computed JSON file and sum percentages
+          let totalPercentage = 0;
+          
+          const layerPercentages = restrictedLayers.map(layer => {
+            const fileName = layer.name;
+            const stats = restrictedAreaStats[fileName];
+            
+            if (stats) {
+              totalPercentage += stats.percentage;
+              return {
+                name: layer.name,
+                percentage: stats.percentage
+              };
+            }
+            return { name: layer.name, percentage: 0 };
+          });
+          
+          const avgRedPct = totalPercentage;
+          
+          const layersWithStats = restrictedLayers.filter(layer => {
+            const fileName = layer.name;
+            return restrictedAreaStats[fileName] !== undefined;
+          });
+          
+          return (
+            <div className="space-y-6">
              <div className="mb-4">
                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Restricted Area Layers</h2>
-               <p className="text-xs text-gray-500">
+               <p className="text-xs text-gray-500 mb-3">
                  Restricted area layers are automatically loaded and visualized on startup.
                </p>
+
+               {/* Screening Criteria Table */}
+               <div className="bg-gis-800 rounded-lg border border-gis-700 p-4 mb-4">
+                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Screening Criteria</h3>
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-xs border-collapse">
+                     <thead>
+                       <tr>
+                         <th className="border border-gis-700 bg-gis-900 px-2 py-2 text-gray-300 font-semibold text-left">
+                           Screening Criteria
+                         </th>
+                         <th className="border border-gis-700 bg-gis-900 px-2 py-2 text-gray-300 font-semibold text-center">
+                           Buffer Distance / Condition
+                         </th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Military Sites</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;1000m</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Airfield & Runways</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;1000m</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Slope</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;10 degrees</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Protected Areas</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">Inclusive</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">EPA Non Attainment Area</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">Optional Screen - Only if DC wants to site with gas</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Open Mining Claims</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">Inclusive</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Major Railroad</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;150 meters</td>
+                       </tr>
+                       <tr>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300">Population Density</td>
+                         <td className="border border-gis-700 px-2 py-1.5 text-gray-300 text-center">&lt;250 meters</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+               </div>
+               
+               {/* Red Area Percentage Statistic */}
+               {layersWithStats.length > 0 && (
+                 <div className="bg-gis-800 rounded-lg border border-gis-700 p-4">
+                   <div className="flex items-center justify-between mb-3">
+                     <div>
+                       <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Map Coverage</p>
+                       <p className="text-2xl font-bold text-red-400">{avgRedPct.toFixed(1)}%</p>
+                       <p className="text-xs text-gray-500 mt-1">Red (Restricted) Areas</p>
+                       <p className="text-[10px] text-gray-600 mt-1 italic">
+                         Sum of coverage percentages across {layersWithStats.length} layer{layersWithStats.length !== 1 ? 's' : ''}
+                       </p>
+                     </div>
+                     <div className="relative w-16 h-16">
+                       <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                         <circle
+                           cx="32"
+                           cy="32"
+                           r="28"
+                           stroke="#334155"
+                           strokeWidth="6"
+                           fill="none"
+                         />
+                         <circle
+                           cx="32"
+                           cy="32"
+                           r="28"
+                           stroke="#ef4444"
+                           strokeWidth="6"
+                           fill="none"
+                           strokeDasharray={`${2 * Math.PI * 28}`}
+                           strokeDashoffset={`${2 * Math.PI * 28 * (1 - avgRedPct / 100)}`}
+                           strokeLinecap="round"
+                         />
+                       </svg>
+                       <div className="absolute inset-0 flex items-center justify-center">
+                         <span className="text-xs font-bold text-red-400">{avgRedPct.toFixed(0)}%</span>
+                       </div>
+                     </div>
+                   </div>
+                   {/* Per-layer breakdown */}
+                   <div className="mt-3 pt-3 border-t border-gis-700">
+                     <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Per Layer:</p>
+                     <div className="space-y-1.5">
+                       {layerPercentages.map((layerPct, idx) => (
+                         <div key={layersWithStats[idx]?.id || idx} className="flex items-center justify-between text-xs">
+                           <span className="text-gray-400 truncate max-w-[140px]" title={layerPct.name}>
+                             {layerPct.name.length > 20 ? layerPct.name.substring(0, 20) + '...' : layerPct.name}
+                           </span>
+                           <span className="text-red-400 font-medium ml-2">
+                             {layerPct.percentage.toFixed(1)}%
+                           </span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+               )}
              </div>
 
              <div className="space-y-3">
-               {layers.filter(l => 
-                 l.name.includes('airfields') ||
-                 l.name.includes('military') ||
-                 l.name.includes('Railroads') ||
-                 l.name.includes('Roads')
-               ).length === 0 ? (
+               {restrictedLayers.length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-64 text-gray-400 p-6 text-center border border-dashed border-gis-700 rounded-lg">
                    <Shield className="w-12 h-12 mb-3 opacity-20" />
                    <p className="text-sm">No restricted area layers loaded.</p>
                    <p className="text-xs mt-1">Check the Restrictions directory.</p>
                  </div>
                ) : (
-                 layers
-                   .filter(l => 
-                     l.name.includes('airfields') ||
-                     l.name.includes('military') ||
-                     l.name.includes('Railroads') ||
-                     l.name.includes('Roads')
-                   )
+                 restrictedLayers
                    .map((layer) => (
                      <div 
                        key={layer.id} 
@@ -289,6 +550,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                )}
              </div>
           </div>
+          );
+        })()}
+
+        {activePanel === PanelView.STATISTICS && (
+          <StatisticsDashboard
+            layers={layers}
+            activeLayerId={activeLayerId}
+            setActiveLayerId={setActiveLayerId}
+          />
         )}
 
       </div>

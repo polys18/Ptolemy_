@@ -1,9 +1,19 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MapViewer } from './components/MapViewer';
+import { SummaryPanel } from './components/SummaryPanel';
 import { LayerData, PanelView } from './types';
 import { processGeoTiff } from './utils/tiffUtils';
 import { Toaster, toast } from 'react-hot-toast';
+
+// Pre-computed statistics for restricted area files
+interface RestrictedAreaStats {
+  [filename: string]: {
+    ones: number;
+    zeros: number;
+    percentage: number;
+  };
+}
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -34,6 +44,26 @@ function App() {
   const [activePanel, setActivePanel] = useState<PanelView>(PanelView.LAYERS);
   const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [restrictedAreaStats, setRestrictedAreaStats] = useState<RestrictedAreaStats>({});
+  const [summaryPanelOpen, setSummaryPanelOpen] = useState(true);
+  
+  // Expose layers globally for calculation script (temporary)
+  useEffect(() => {
+    (window as any).layers = layers;
+  }, [layers]);
+  
+  // Load pre-computed restricted area statistics from JSON file
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}restrictedAreaStats.json`)
+      .then(res => res.json())
+      .then((data: RestrictedAreaStats) => {
+        setRestrictedAreaStats(data);
+      })
+      .catch(err => {
+        console.warn('Failed to load restricted area stats:', err);
+        setRestrictedAreaStats({});
+      });
+  }, []);
 
   // Load Data Centers files on startup
   useEffect(() => {
@@ -47,81 +77,96 @@ function App() {
       console.log('Starting to load data centers:', DATA_CENTER_FILES);
       dataCentersLoading = true;
       setLoading(true);
+      
+      // Safety timeout - ensure loading state is reset after 2 minutes
+      let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
+        console.warn('Loading timeout - resetting loading state');
+        setLoading(false);
+        dataCentersLoading = false;
+      }, 120000); // 2 minutes
+      
       const loadedLayers: LayerData[] = [];
 
-      for (let i = 0; i < DATA_CENTER_FILES.length; i++) {
-        const filePath = DATA_CENTER_FILES[i];
-        const fileName = filePath.split('/').pop() || filePath;
-        try {
-          console.log(`[${i + 1}/${DATA_CENTER_FILES.length}] Fetching: ${fileName}...`);
-          const response = await fetch(filePath);
-          if (!response.ok) {
-            console.warn(`Failed to load ${filePath}: ${response.status} ${response.statusText}`);
-            continue;
-          }
+      try {
+        for (let i = 0; i < DATA_CENTER_FILES.length; i++) {
+          const filePath = DATA_CENTER_FILES[i];
+          const fileName = filePath.split('/').pop() || filePath;
+          try {
+            console.log(`[${i + 1}/${DATA_CENTER_FILES.length}] Fetching: ${fileName}...`);
+            const response = await fetch(filePath);
+            if (!response.ok) {
+              console.warn(`Failed to load ${filePath}: ${response.status} ${response.statusText}`);
+              continue;
+            }
 
-          console.log(`Downloading ${fileName} (this may take a while for large files)...`);
-          const blob = await response.blob();
-          const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(1);
-          console.log(`File size: ${fileSizeMB} MB`);
-          
-          // Warn if file is very large (over 50MB)
-          if (blob.size > 50 * 1024 * 1024) {
-            console.warn(`⚠️ ${fileName} is very large (${fileSizeMB} MB) and may cause memory issues`);
-            toast.loading(`Processing large file: ${fileName} (${fileSizeMB} MB)...`, { id: `loading-${i}` });
-          }
-          
-          const file = new File([blob], fileName, { type: 'image/tiff' });
+            console.log(`Downloading ${fileName} (this may take a while for large files)...`);
+            const blob = await response.blob();
+            const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(1);
+            console.log(`File size: ${fileSizeMB} MB`);
+            
+            // Warn if file is very large (over 50MB)
+            if (blob.size > 50 * 1024 * 1024) {
+              console.warn(`⚠️ ${fileName} is very large (${fileSizeMB} MB) and may cause memory issues`);
+              toast.loading(`Processing large file: ${fileName} (${fileSizeMB} MB)...`, { id: `loading-${i}` });
+            }
+            
+            const file = new File([blob], fileName, { type: 'image/tiff' });
 
-          console.log(`Processing ${fileName} (this may take a while)...`);
-          const { georaster, stats } = await processGeoTiff(file);
-          
-          const newLayer: LayerData = {
-            id: generateId(),
-            name: fileName,
-            file,
-            opacity: 1,
-            visible: true,
-            georaster,
-            stats
-          };
+            console.log(`Processing ${fileName} (this may take a while)...`);
+            const { georaster, stats } = await processGeoTiff(file);
+            
+            const newLayer: LayerData = {
+              id: generateId(),
+              name: fileName,
+              file,
+              opacity: 1,
+              visible: true,
+              georaster,
+              stats
+            };
 
-          loadedLayers.push(newLayer);
-          toast.dismiss(`loading-${i}`);
-          console.log(`✓ Successfully loaded ${fileName} (${i + 1}/${DATA_CENTER_FILES.length})`);
-        } catch (error: any) {
-          toast.dismiss(`loading-${i}`);
-          if (error?.message?.includes('Array buffer allocation failed') || error?.name === 'RangeError') {
-            console.error(`❌ ${fileName} is too large to process in browser memory`);
-            toast.error(`${fileName} is too large (memory limit exceeded). Try a smaller file or process server-side.`);
-          } else {
-            console.error(`Error loading ${filePath}:`, error);
-            toast.error(`Failed to load ${fileName}`);
+            loadedLayers.push(newLayer);
+            toast.dismiss(`loading-${i}`);
+            console.log(`✓ Successfully loaded ${fileName} (${i + 1}/${DATA_CENTER_FILES.length})`);
+          } catch (error: any) {
+            toast.dismiss(`loading-${i}`);
+            if (error?.message?.includes('Array buffer allocation failed') || error?.name === 'RangeError') {
+              console.error(`❌ ${fileName} is too large to process in browser memory`);
+              toast.error(`${fileName} is too large (memory limit exceeded). Try a smaller file or process server-side.`);
+            } else {
+              console.error(`Error loading ${filePath}:`, error);
+              toast.error(`Failed to load ${fileName}`);
+            }
           }
         }
-      }
 
-      console.log(`Loaded ${loadedLayers.length} data center layers`);
+        console.log(`Loaded ${loadedLayers.length} data center layers`);
 
-      if (loadedLayers.length > 0) {
-        setLayers(prev => {
-          // Double-check we're not adding duplicates by checking layer names
-          const existingNames = new Set(prev.map(l => l.name));
-          const newLayers = loadedLayers.filter(l => !existingNames.has(l.name));
-          if (newLayers.length === 0) {
-            return prev; // All layers already exist
-          }
-          return [...newLayers, ...prev];
-        });
-        setActiveLayerId(prevId => prevId || loadedLayers[0]?.id || null);
-        toast.success(`Loaded ${loadedLayers.length} data center layer(s)`);
-      } else {
-        console.warn('No data center layers were loaded');
+        if (loadedLayers.length > 0) {
+          setLayers(prev => {
+            // Double-check we're not adding duplicates by checking layer names
+            const existingNames = new Set(prev.map(l => l.name));
+            const newLayers = loadedLayers.filter(l => !existingNames.has(l.name));
+            if (newLayers.length === 0) {
+              return prev; // All layers already exist
+            }
+            return [...newLayers, ...prev];
+          });
+          setActiveLayerId(prevId => prevId || loadedLayers[0]?.id || null);
+          toast.success(`Loaded ${loadedLayers.length} data center layer(s)`);
+        } else {
+          console.warn('No data center layers were loaded');
+        }
+      } catch (error) {
+        console.error('Error in loadDataCenters:', error);
+      } finally {
+        dataCentersLoaded = true;
+        dataCentersLoading = false;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        setLoading(false);
       }
-      
-      dataCentersLoaded = true;
-      dataCentersLoading = false;
-      setLoading(false);
     };
 
     loadDataCenters();
@@ -174,9 +219,18 @@ function App() {
           const existingNames = new Set(prev.map(l => l.name));
           const newLayers = loadedLayers.filter(l => !existingNames.has(l.name));
           if (newLayers.length === 0) {
-            return prev; // All layers already exist
+            // If layers already exist, ensure they're visible
+            return prev.map(l => {
+              const isRestricted = loadedLayers.some(nl => nl.name === l.name);
+              if (isRestricted && !l.visible) {
+                return { ...l, visible: true };
+              }
+              return l;
+            });
           }
-          return [...newLayers, ...prev];
+          // Ensure all new layers are visible
+          const visibleLayers = newLayers.map(l => ({ ...l, visible: true }));
+          return [...visibleLayers, ...prev];
         });
         setActiveLayerId(prevId => prevId || loadedLayers[0]?.id || null);
         toast.success(`Loaded ${loadedLayers.length} restricted area layer(s)`);
@@ -256,17 +310,19 @@ function App() {
         }}
       />
       
-      <Sidebar 
-        layers={layers}
-        onUpload={handleUpload}
-        onToggleVisibility={handleToggleVisibility}
-        onUpdateOpacity={handleUpdateOpacity}
-        onRemoveLayer={handleRemoveLayer}
-        activePanel={activePanel}
-        setActivePanel={setActivePanel}
-        activeLayerId={activeLayerId}
-        setActiveLayerId={setActiveLayerId}
-      />
+             <Sidebar
+               layers={layers}
+               onUpload={handleUpload}
+               onToggleVisibility={handleToggleVisibility}
+               onUpdateOpacity={handleUpdateOpacity}
+               onRemoveLayer={handleRemoveLayer}
+               activePanel={activePanel}
+               setActivePanel={setActivePanel}
+               activeLayerId={activeLayerId}
+               setActiveLayerId={setActiveLayerId}
+               restrictedAreaStats={restrictedAreaStats}
+               onToggleSummary={() => setSummaryPanelOpen(!summaryPanelOpen)}
+             />
 
       <div className="flex-1 relative h-full w-full">
         {loading && (
@@ -276,6 +332,8 @@ function App() {
         )}
         <MapViewer layers={layers} activePanel={activePanel} />
       </div>
+
+      <SummaryPanel isOpen={summaryPanelOpen} onClose={() => setSummaryPanelOpen(false)} />
     </div>
   );
 }

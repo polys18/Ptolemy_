@@ -1,0 +1,22 @@
+{
+  "airfields_screen.tiff": {
+    "ones": 0,
+    "zeros": 0,
+    "percentage": 1.2
+  },
+  "military_sites_screen.tiff": {
+    "ones": 0,
+    "zeros": 0,
+    "percentage": 4.3
+  },
+  "Railroads_screen.tiff": {
+    "ones": 0,
+    "zeros": 0,
+    "percentage": 0.6
+  },
+  "Roads.tiff": {
+    "ones": 0,
+    "zeros": 0,
+    "percentage": 2.8
+  }
+}

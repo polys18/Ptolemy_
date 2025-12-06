@@ -215,11 +215,19 @@ export const MapViewer: React.FC<MapViewerProps> = ({ layers, activePanel }) => 
         l.name.includes('Roads')
       );
     }
-    // For LAYERS tab, show all layers
+    // For LAYERS and STATISTICS tabs, show all layers
     return layers;
   };
 
   const filteredLayers = getFilteredLayers();
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('MapViewer - Total layers:', layers.length);
+    console.log('MapViewer - Filtered layers:', filteredLayers.length);
+    console.log('MapViewer - Active panel:', activePanel);
+    console.log('MapViewer - Layer names:', layers.map(l => l.name));
+  }, [layers, filteredLayers, activePanel]);
   
   // Get visible layers in reverse order (bottom to top rendering)
   // We receive layers in Top -> Bottom order (UI order).

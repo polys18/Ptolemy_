@@ -1,0 +1,42 @@
+<table border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
+  <thead>
+    <tr>
+      <th>Screening Criteria</th>
+      <th>Buffer Distance / Condition</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Military Sites</td>
+      <td>&lt;1000m</td>
+    </tr>
+    <tr>
+      <td>Airfield & Runways</td>
+      <td>&lt;1000m</td>
+    </tr>
+    <tr>
+      <td>Slope</td>
+      <td>&lt;10 degrees</td>
+    </tr>
+    <tr>
+      <td>Protected Areas</td>
+      <td>Inclusive</td>
+    </tr>
+    <tr>
+      <td>EPA Non Attainment Area</td>
+      <td>Optional Screen - Only if DC wants to site with gas</td>
+    </tr>
+    <tr>
+      <td>Open Mining Claims</td>
+      <td>Inclusive</td>
+    </tr>
+    <tr>
+      <td>Major Railroad</td>
+      <td>&lt;150 meters</td>
+    </tr>
+    <tr>
+      <td>Population Density</td>
+      <td>&lt;250 meters</td>
+    </tr>
+  </tbody>
+</table>

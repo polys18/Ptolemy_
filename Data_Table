@@ -1,0 +1,86 @@
+<table border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
+  <thead>
+    <tr>
+      <th rowspan="2">Screening Criteria</th>
+      <th colspan="4">Screening Color Category</th>
+    </tr>
+    <tr>
+      <th>Blue</th>
+      <th>Cyan</th>
+      <th>Yellow</th>
+      <th>Red</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Roads (miles)</td>
+      <td>&gt;50</td>
+      <td>&lt;30</td>
+      <td>&lt;25</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Fiber Line (miles)</td>
+      <td>&gt;30</td>
+      <td>&lt;20</td>
+      <td>&lt;15</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Transmission Line (miles)</td>
+      <td>&gt;30</td>
+      <td>&lt;20</td>
+      <td>&lt;15</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Substation (miles)</td>
+      <td>&gt;30</td>
+      <td>&lt;20</td>
+      <td>&lt;15</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Gas Pipeline (miles)</td>
+      <td>&gt;30</td>
+      <td>&lt;20</td>
+      <td>&lt;15</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Carbon Storage (miles)</td>
+      <td>&gt;50</td>
+      <td>&lt;30</td>
+      <td>&lt;25</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Gas Storage (miles)</td>
+      <td>&gt;50</td>
+      <td>&lt;30</td>
+      <td>&lt;25</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Urban Areas (miles)</td>
+      <td>&gt;30</td>
+      <td>&lt;20</td>
+      <td>&lt;15</td>
+      <td>&lt;10</td>
+    </tr>
+    <tr>
+      <td>Land Cost ($k/acre)</td>
+      <td>&gt;319</td>
+      <td>319</td>
+      <td>130</td>
+      <td>60</td>
+    </tr>
+    <tr>
+      <td>Data Center Employees</td>
+      <td>&lt;20</td>
+      <td>&gt;20</td>
+      <td>&gt;100</td>
+      <td>&gt;200</td>
+    </tr>
+  </tbody>
+</table>

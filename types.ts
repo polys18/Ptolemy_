@@ -25,11 +25,14 @@ export interface RasterStats {
   histogram: { bin: number; count: number }[];
   redPct: number;
   bluePct: number;
+  ones?: number; // Count of pixels with value 1
+  zeros?: number; // Count of pixels with value 0
 }
 
 export enum PanelView {
   LAYERS = 'LAYERS',
   DATA_CENTERS = 'DATA_CENTERS',
   RESTRICTED_AREAS = 'RESTRICTED_AREAS',
+  STATISTICS = 'STATISTICS',
   SETTINGS = 'SETTINGS'
 }
